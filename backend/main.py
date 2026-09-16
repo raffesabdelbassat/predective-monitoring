@@ -9,3 +9,7 @@ def read_root():
 @app.get("/health")
 def health_check():
     return {"status": "ok"} 
+
+@app.get("/status/{service_name}")
+def service_status(service_name: str):
+    return {"service": service_name, "status": "monitoring not yet implemented"} 
