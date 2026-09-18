@@ -13,3 +13,8 @@ def health_check():
 @app.get("/status/{service_name}")
 def service_status(service_name: str):
     return {"service": service_name, "status": "monitoring not yet implemented"} 
+
+@app.post("/metrics")
+def receive_metrics(metrics: dict):
+    print(f"Received metrics: {metrics}")
+    return {"status": "received"}  
