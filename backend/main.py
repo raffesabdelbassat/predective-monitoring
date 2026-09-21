@@ -29,3 +29,8 @@ def receive_metrics(metrics: dict, db: Session = Depends(get_db)):
     db.refresh(db_metric)
     print(f"Stored metric id={db_metric.id}: {metrics}")
     return {"status": "stored", "id": db_metric.id}
+
+@app.get("/metrics")
+def list_metrics(db: Session = Depends(get_db)):
+    metrics = db.query(Metric).order_by(Metric.timestamp.desc()).limit(10).all()
+    return metrics 
