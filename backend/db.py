@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, Float, DateTime
+from sqlalchemy import create_engine, Column, Integer, Float, DateTime, BigInteger
 from sqlalchemy.orm import sessionmaker, declarative_base
 from datetime import datetime
 
@@ -15,6 +15,9 @@ class Metric(Base):
     timestamp = Column(DateTime, default=datetime.utcnow)
     cpu_percent = Column(Float, nullable=False)
     memory_percent = Column(Float, nullable=False)
+    disk_percent = Column(Float, nullable=False)
+    net_bytes_sent = Column(BigInteger, nullable=False)
+    net_bytes_recv = Column(BigInteger, nullable=False)
 
 def get_db():
     db = SessionLocal()
