@@ -7,6 +7,9 @@ from ai import detect_anomalies
 
 from forecast import forecast_cpu
 from alerts import check_alerts
+from fastapi import WebSocket, WebSocketDisconnect
+import asyncio
+import json
 app = FastAPI()
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -80,4 +83,35 @@ def get_forecast(hours: int = 1, db: Session = Depends(get_db)):
 
 @app.get("/alerts")
 def get_alerts(db: Session = Depends(get_db)):
-    return check_alerts(db)
+    return check_alerts(db) 
+@app.websocket("/ws/metrics")
+async def websocket_metrics(websocket: WebSocket):
+    await websocket.accept()
+    try:
+        while True:
+            db = next(get_db())
+            latest = db.query(Metric).order_by(Metric.timestamp.desc()).first()
+            alerts_data = check_alerts(db)
+            db.close()
+
+            if latest:
+                payload = {
+                    "cpu_percent": latest.cpu_percent,
+                    "memory_percent": latest.memory_percent,
+                    "disk_percent": latest.disk_percent,
+                    "timestamp": latest.timestamp.isoformat(),
+                    "alert_count": alerts_data["alert_count"],
+                }
+                await websocket.send_text(json.dumps(payload))
+
+            await asyncio.sleep(5)
+    except WebSocketDisconnect:
+        pass 
+
+
+    from db import AlertHistory
+
+@app.get("/alerts/history")
+def alert_history(db: Session = Depends(get_db)):
+    history = db.query(AlertHistory).order_by(AlertHistory.timestamp.desc()).limit(50).all()
+    return history 
