@@ -12,5 +12,25 @@ services:
     volumes:
       - timescale_data:/var/lib/postgresql/data
 
+  backend:
+    build: ./backend
+    container_name: monitor-backend
+    restart: unless-stopped
+    depends_on:
+      - timescaledb
+    environment:
+      DATABASE_URL: postgresql://monitor_user:monitor_pass@timescaledb:5432/monitor_db
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build: ./frontend
+    container_name: monitor-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+
 volumes:
   timescale_data:
