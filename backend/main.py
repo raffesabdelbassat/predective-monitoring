@@ -3,7 +3,9 @@ from sqlalchemy.orm import Session
 from db import Base, engine, get_db, Metric
 from schemas import MetricIn 
 from sqlalchemy import func
+from ai import detect_anomalies
 app = FastAPI()
+from forecast import forecast_cpu
 
 Base.metadata.create_all(bind=engine)
 
@@ -45,6 +47,10 @@ def latest_metric(db: Session = Depends(get_db)):
         return {"message": "No metrics recorded yet"}
     return metric
 
+@app.get("/predictions/anomaly")
+def get_anomaly_check(db: Session = Depends(get_db)):
+    return detect_anomalies(db) 
+
 @app.get("/metrics/stats")
 def metrics_stats(db: Session = Depends(get_db)):
     result = db.query(
@@ -58,3 +64,6 @@ def metrics_stats(db: Session = Depends(get_db)):
         "avg_memory_percent": round(result[1], 2) if result[1] else None,
         "avg_disk_percent": round(result[2], 2) if result[2] else None,
     } 
+@app.get("/predictions/forecast")
+def get_forecast(hours: int = 1, db: Session = Depends(get_db)):
+    return forecast_cpu(db, hours_ahead=hours)
