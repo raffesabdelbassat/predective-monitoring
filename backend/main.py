@@ -4,10 +4,19 @@ from db import Base, engine, get_db, Metric
 from schemas import MetricIn 
 from sqlalchemy import func
 from ai import detect_anomalies
-app = FastAPI()
+
 from forecast import forecast_cpu
 from alerts import check_alerts
+app = FastAPI()
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 Base.metadata.create_all(bind=engine)
 
 @app.get("/")
