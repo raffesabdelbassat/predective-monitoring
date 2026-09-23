@@ -6,6 +6,7 @@ from sqlalchemy import func
 from ai import detect_anomalies
 app = FastAPI()
 from forecast import forecast_cpu
+from alerts import check_alerts
 
 Base.metadata.create_all(bind=engine)
 
@@ -66,4 +67,8 @@ def metrics_stats(db: Session = Depends(get_db)):
     } 
 @app.get("/predictions/forecast")
 def get_forecast(hours: int = 1, db: Session = Depends(get_db)):
-    return forecast_cpu(db, hours_ahead=hours)
+    return forecast_cpu(db, hours_ahead=hours)  
+
+@app.get("/alerts")
+def get_alerts(db: Session = Depends(get_db)):
+    return check_alerts(db)
