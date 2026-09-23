@@ -2,6 +2,8 @@ from sqlalchemy.orm import Session
 from db import Metric
 from ai import detect_anomalies
 from forecast import forecast_cpu
+from db import AlertHistory
+from datetime import datetime
 
 def check_alerts(db: Session):
     alerts = []
@@ -39,6 +41,19 @@ def check_alerts(db: Session):
                 "severity": "critical",
                 "message": f"Memory usage at {latest.memory_percent}% — system may become unresponsive."
             })
+            for alert in alerts:
+        existing = db.query(AlertHistory).filter(
+            AlertHistory.message == alert["message"]
+        ).order_by(AlertHistory.timestamp.desc()).first()
+
+        if not existing or (datetime.utcnow() - existing.timestamp).total_seconds() > 300:
+            db_alert = AlertHistory(
+                alert_type=alert["type"],
+                severity=alert["severity"],
+                message=alert["message"],
+            )
+            db.add(db_alert)
+    db.commit()
 
     return {
         "alert_count": len(alerts),

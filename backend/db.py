@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine, Column, Integer, Float, DateTime, BigInteger
 from sqlalchemy.orm import sessionmaker, declarative_base
 from datetime import datetime
-
+from sqlalchemy import create_engine, Column, Integer, Float, DateTime, BigInteger, String
 DATABASE_URL = "postgresql://monitor_user:monitor_pass@127.0.0.1:5433/monitor_db"
 
 engine = create_engine(DATABASE_URL)
