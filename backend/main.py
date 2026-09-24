@@ -10,6 +10,9 @@ from alerts import check_alerts
 from fastapi import WebSocket, WebSocketDisconnect
 import asyncio
 import json
+
+from fastapi import Body
+ 
 app = FastAPI()
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -115,3 +118,7 @@ async def websocket_metrics(websocket: WebSocket):
 def alert_history(db: Session = Depends(get_db)):
     history = db.query(AlertHistory).order_by(AlertHistory.timestamp.desc()).limit(50).all()
     return history 
+
+@app.post("/processes")
+def receive_processes(processes: list[dict] = Body(...)):
+    return {"status": "received", "count": len(processes)}
