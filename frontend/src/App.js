@@ -98,3 +98,5 @@ function Card({ label, value }) {
 }
 
 export default App;
+
+const [health, setHealth] = useState(null); 
