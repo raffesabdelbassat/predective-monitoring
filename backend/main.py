@@ -10,7 +10,9 @@ from alerts import check_alerts
 from fastapi import WebSocket, WebSocketDisconnect
 import asyncio
 import json
-
+from fastapi.responses import StreamingResponse
+import csv
+import io
 from health import calculate_health_score 
 from fastapi import Body
  
@@ -128,3 +130,20 @@ def receive_processes(processes: list[dict] = Body(...)):
 @app.get("/health/score")
 def get_health_score(db: Session = Depends(get_db)):
     return calculate_health_score(db) 
+
+@app.get("/metrics/export")
+def export_metrics(db: Session = Depends(get_db)):
+    rows = db.query(Metric).order_by(Metric.timestamp.asc()).all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["id", "timestamp", "cpu_percent", "memory_percent", "disk_percent", "net_bytes_sent", "net_bytes_recv"])
+    for r in rows:
+        writer.writerow([r.id, r.timestamp, r.cpu_percent, r.memory_percent, r.disk_percent, r.net_bytes_sent, r.net_bytes_recv])
+
+    output.seek(0)
+    return StreamingResponse(
+        output,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=metrics_export.csv"}
+    ) 

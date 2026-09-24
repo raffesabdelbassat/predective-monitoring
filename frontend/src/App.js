@@ -19,6 +19,7 @@ function App() {
         axios.get(`${API_URL}/alerts`),
         axios.get(`${API_URL}/predictions/anomaly`),
         axios.get(`${API_URL}/predictions/forecast?hours=1`),
+        axios.get(`${API_URL}/alerts/history`),
       ]);
       setMetrics(metricsRes.data.slice().reverse());
       setLatest(latestRes.data);
@@ -87,10 +88,31 @@ function App() {
     </div>
   );
 }
-
+<div style={{ marginBottom: "24px" }}>
+  <h3>Alert History</h3>
+  <a href={`${API_URL}/metrics/export`} download>
+    <button style={{ marginBottom: "12px" }}>Export Metrics CSV</button>
+  </a>
+  <table style={{ width: "100%", borderCollapse: "collapse" }}>
+    <thead>
+      <tr style={{ textAlign: "left", borderBottom: "2px solid #ccc" }}>
+        <th>Time</th><th>Severity</th><th>Message</th>
+      </tr>
+    </thead>
+    <tbody>
+      {alertHistory.slice(0, 10).map((a) => (
+        <tr key={a.id} style={{ borderBottom: "1px solid #eee" }}>
+          <td>{new Date(a.timestamp).toLocaleTimeString()}</td>
+          <td>{a.severity}</td>
+          <td>{a.message}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div> 
 function Card({ label, value }) {
   return (
-    <div style={{ background: "#f5f5f5", padding: "16px", borderRadius: "8px", flex: 1, textAlign: "center" }}>
+    <div style={{ background: "#f8f2f2", padding: "16px", borderRadius: "8px", flex: 1, textAlign: "center" }}>
       <div style={{ fontSize: "14px", color: "#666" }}>{label}</div>
       <div style={{ fontSize: "28px", fontWeight: "bold" }}>{value}</div>
     </div>
@@ -100,3 +122,4 @@ function Card({ label, value }) {
 export default App;
 
 const [health, setHealth] = useState(null); 
+const [alertHistory, setAlertHistory] = useState([]);  
