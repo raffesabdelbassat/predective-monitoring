@@ -11,6 +11,7 @@ from fastapi import WebSocket, WebSocketDisconnect
 import asyncio
 import json
 
+from health import calculate_health_score 
 from fastapi import Body
  
 app = FastAPI()
@@ -122,3 +123,8 @@ def alert_history(db: Session = Depends(get_db)):
 @app.post("/processes")
 def receive_processes(processes: list[dict] = Body(...)):
     return {"status": "received", "count": len(processes)}
+
+
+@app.get("/health/score")
+def get_health_score(db: Session = Depends(get_db)):
+    return calculate_health_score(db) 

@@ -20,6 +20,24 @@ class Metric(Base):
     net_bytes_sent = Column(BigInteger, nullable=False)
     net_bytes_recv = Column(BigInteger, nullable=False)
 
+
+ class AlertHistory(Base):
+    __tablename__ = "alert_history"
+
+    id = Column(Integer, primary_key=True, index=True)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+    alert_type = Column(String, nullable=False)
+    severity = Column(String, nullable=False)
+    message = Column(String, nullable=False)
+ class AlertConfig(Base):
+    
+    __tablename__ = "alert_config"
+
+    id = Column(Integer, primary_key=True, index=True)
+    cpu_threshold = Column(Float, default=90.0)
+    memory_threshold = Column(Float, default=95.0)
+    disk_threshold = Column(Float, default=90.0)  
+    
 def get_db():
     db = SessionLocal()
     try:
