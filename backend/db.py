@@ -20,8 +20,7 @@ class Metric(Base):
     net_bytes_sent = Column(BigInteger, nullable=False)
     net_bytes_recv = Column(BigInteger, nullable=False)
 
-
- class AlertHistory(Base):
+class AlertHistory(Base):
     __tablename__ = "alert_history"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -29,7 +28,7 @@ class Metric(Base):
     alert_type = Column(String, nullable=False)
     severity = Column(String, nullable=False)
     message = Column(String, nullable=False)
- class AlertConfig(Base):
+class AlertConfig(Base):
     
     __tablename__ = "alert_config"
 

@@ -147,3 +147,10 @@ def export_metrics(db: Session = Depends(get_db)):
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=metrics_export.csv"}
     ) 
+
+
+from failure import predict_failures
+
+@app.get("/predictions/failure")
+def get_failure_prediction(db: Session = Depends(get_db)):
+    return predict_failures(db) 
