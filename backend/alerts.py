@@ -4,7 +4,7 @@ from ai import detect_anomalies
 from forecast import forecast_cpu
 from db import AlertHistory
 from datetime import datetime
-
+from failure import predict_failures
 def check_alerts(db: Session):
     alerts = []
 
@@ -41,6 +41,32 @@ def check_alerts(db: Session):
                 "severity": "critical",
                 "message": f"Memory usage at {latest.memory_percent}% — system may become unresponsive."
             })
+                failure = predict_failures(db)
+            mem = failure["memory"]
+         if (
+                    mem.get("hours_to_limit") is not None
+                    and mem["hours_to_limit"] < 6
+                    and mem["trend_confidence"] > 0.5
+                ):
+                    alerts.append({
+                        "type": "prediction",
+                        "severity": "critical",
+                        "message": f"Memory usage pattern suggests a memory leak. "
+                                   f"Estimated exhaustion in {mem['hours_to_limit']} hours "
+                                   f"(confidence {mem['trend_confidence']}).",
+                    })
+            
+                disk = failure["disk"]
+                if (
+                    disk.get("hours_to_limit") is not None
+                    and disk["hours_to_limit"] < 24
+                    and disk["trend_confidence"] > 0.5
+                ):
+                    alerts.append({
+                        "type": "prediction",
+                        "severity": "warning",
+                        "message": f"Disk filling steadily. Estimated full in {disk['hours_to_limit']} hours.",
+                    }) 
             for alert in alerts:
         existing = db.query(AlertHistory).filter(
             AlertHistory.message == alert["message"]
