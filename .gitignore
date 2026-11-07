@@ -4,3 +4,10 @@ __pycache__/
 .env
 .DS_Store
 .vscode/
+node_modules/
+build/
+dist/
+coverage/
+.pytest_cache/
+.jest-cache/
+.venv/

@@ -4,33 +4,50 @@ services:
     container_name: monitor-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: monitor_user
-      POSTGRES_PASSWORD: monitor_pass
-      POSTGRES_DB: monitor_db
+      POSTGRES_USER: ${POSTGRES_USER:-monitor_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-monitor_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-monitor_db}
     ports:
-      - "5433:5432"
+      - "${POSTGRES_PORT:-5433}:5432"
     volumes:
       - timescale_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
   backend:
     build: ./backend
     container_name: monitor-backend
     restart: unless-stopped
     depends_on:
-      - timescaledb
+      timescaledb:
+        condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://monitor_user:monitor_pass@timescaledb:5432/monitor_db
+      DATABASE_URL: postgresql://${POSTGRES_USER:-monitor_user}:${POSTGRES_PASSWORD:-monitor_pass}@timescaledb:5432/${POSTGRES_DB:-monitor_db}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
     ports:
-      - "8000:8000"
+      - "${API_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
     container_name: monitor-frontend
     restart: unless-stopped
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT:-3000}:80"
 
 volumes:
   timescale_data:
