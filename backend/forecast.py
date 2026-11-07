@@ -1,25 +1,26 @@
 import numpy as np
 from sqlalchemy.orm import Session
+
 from db import Metric
+
 
 def forecast_cpu(db: Session, hours_ahead: int = 1):
     rows = db.query(Metric).order_by(Metric.timestamp.asc()).all()
     if len(rows) < 10:
         return {"status": "not enough data", "min_required": 10, "have": len(rows)}
 
-    y = np.array([r.cpu_percent for r in rows])
-    x = np.arange(len(y))
+    timestamps = np.array([row.timestamp.timestamp() for row in rows], dtype=float)
+    timestamps -= timestamps[0]
+    values = np.array([row.cpu_percent for row in rows], dtype=float)
+    if timestamps[-1] == 0:
+        return {"status": "insufficient time span", "min_required_seconds": 1}
 
-    coeffs = np.polyfit(x, y, 1)
-    slope, intercept = coeffs
-
-    future_x = len(y) + (hours_ahead * 360)
-    predicted = slope * future_x + intercept
-    predicted = max(0, min(100, predicted))
-
+    slope, intercept = np.polyfit(timestamps, values, 1)
+    predicted = float(np.clip(slope * (timestamps[-1] + hours_ahead * 3600) + intercept, 0, 100))
     return {
-        "current_cpu": float(y[-1]),
+        "current_cpu": float(values[-1]),
         "predicted_cpu_in_hours": hours_ahead,
-        "predicted_cpu_percent": round(float(predicted), 2),
-        "trend": "increasing" if slope > 0 else "decreasing" if slope < 0 else "stable",
+        "predicted_cpu_percent": round(predicted, 2),
+        "trend": "increasing" if slope > 0.0001 else "decreasing" if slope < -0.0001 else "stable",
+        "samples_used": len(rows),
     }
