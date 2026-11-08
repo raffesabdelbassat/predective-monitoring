@@ -2,6 +2,35 @@
 
 A small system health platform that collects machine resource readings, stores them in TimescaleDB, and presents trends, capacity estimates, and alerts in a browser dashboard.
 
+<p align="center">
+  <a href="https://github.com/raffesabdelbassat/predective-monitoring"><strong>View the GitHub repository</strong></a>
+  · <a href="#run-the-platform">Run locally</a>
+  · <a href="http://localhost:8000/docs">Explore the API</a>
+</p>
+
+## Overview
+
+The collector sends machine readings to the API. The API stores them in TimescaleDB and serves the dashboard with current health, history, forecasts, and alerts.
+
+<p align="center">
+  <img src="docs/architecture.svg" alt="Architecture diagram showing the machine collector sending readings to the FastAPI service, which stores data in TimescaleDB and serves the React dashboard" width="820" />
+</p>
+
+### What you can do
+
+- Track CPU, memory, disk, network, and top process usage.
+- Review historical charts, active alerts, and alert history.
+- See CPU forecasts, anomaly checks, and resource capacity estimates.
+- Adjust alert thresholds and export metric history to CSV.
+- Connect to the API over HTTP or stream updates over WebSocket.
+
+### Project links
+
+- [Source code and setup](https://github.com/raffesabdelbassat/predective-monitoring)
+- [API reference](http://localhost:8000/docs) (available after starting the platform)
+- [Readiness check](http://localhost:8000/health/ready) (available after starting the platform)
+- [Run the platform](#run-the-platform)
+
 ## Components
 
 - **Collector** — samples CPU, memory, disk, network, and the five busiest processes every 10 seconds.
