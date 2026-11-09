@@ -6,7 +6,10 @@ import psutil
 import requests
 
 
-BACKEND_URL = os.getenv("MONITORING_API_URL", "http://127.0.0.1:8000").rstrip("/")
+BACKEND_URL = os.getenv(
+    "BACKEND_URL",
+    os.getenv("MONITORING_API_URL", "http://127.0.0.1:8000"),
+).rstrip("/")
 COLLECTION_INTERVAL_SECONDS = max(2, int(os.getenv("COLLECTION_INTERVAL_SECONDS", "10")))
 
 
