@@ -30,6 +30,7 @@ class Metric(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     timestamp = Column(DateTime, default=utcnow, nullable=False, index=True)
+    hostname = Column(String(255), nullable=False, default="localhost", server_default="localhost")
     cpu_percent = Column(Float, nullable=False)
     memory_percent = Column(Float, nullable=False)
     disk_percent = Column(Float, nullable=False)

@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 
 
 class MetricIn(BaseModel):
+    hostname: str = Field(default="localhost", min_length=1, max_length=255)
     cpu_percent: float = Field(ge=0, le=100)
     memory_percent: float = Field(ge=0, le=100)
     disk_percent: float = Field(ge=0, le=100)
