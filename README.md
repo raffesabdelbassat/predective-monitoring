@@ -58,14 +58,32 @@ The Compose defaults are intended for local development. Set `POSTGRES_PASSWORD`
 
 ## Start the collector
 
-The collector runs on the machine being monitored. With the platform running, install its dependencies and start it:
+The collector runs on each machine you want to monitor. Install its dependencies on that machine:
 
 ```bash
 python -m pip install -r agent/requirements.txt
+```
+
+If the collector and API run on the same machine, start the collector with the default settings:
+
+```bash
 python agent/collector.py
 ```
 
-Set `MONITORING_API_URL` if the API is not at `http://127.0.0.1:8000`. Set `COLLECTION_INTERVAL_SECONDS` to change the sampling interval; values below two seconds are raised to two seconds.
+For a different machine, replace `192.168.1.50` with the LAN address of the computer running the API. In PowerShell:
+
+```powershell
+$env:BACKEND_URL = "http://192.168.1.50:8000"
+python agent/collector.py
+```
+
+On Linux or macOS:
+
+```bash
+BACKEND_URL="http://192.168.1.50:8000" python agent/collector.py
+```
+
+`BACKEND_URL` takes priority; the older `MONITORING_API_URL` setting is also supported. Set `COLLECTION_INTERVAL_SECONDS` to change the sampling interval; values below two seconds are raised to two seconds. Keep the API on a trusted network and do not expose it directly to the public internet.
 
 ## API overview
 
