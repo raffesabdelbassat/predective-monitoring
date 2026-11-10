@@ -16,6 +16,7 @@ function App() {
   const [alertHistory, setAlertHistory] = useState([]);
   const [failure, setFailure] = useState(null);
   const [processes, setProcesses] = useState([]);
+  const [devices, setDevices] = useState([]);
   const [config, setConfig] = useState({ cpu_threshold: 90, memory_threshold: 95, disk_threshold: 90 });
   const [configMessage, setConfigMessage] = useState("");
   const [error, setError] = useState("");
@@ -36,6 +37,7 @@ function App() {
       axios.get(`${API_URL}/predictions/failure`),
       axios.get(`${API_URL}/processes?limit=5`),
       axios.get(`${API_URL}/alerts/config`),
+      axios.get(`${API_URL}/devices`),
     ]);
     const value = (index) => (requests[index].status === "fulfilled" ? requests[index].value.data : null);
     const metricsData = value(0);
@@ -53,6 +55,7 @@ function App() {
     if (value(7)) setFailure(value(7));
     if (value(8)) setProcesses(value(8));
     if (value(9)) setConfig(value(9));
+    if (value(10)) setDevices(value(10));
 
     const failures = requests.filter((request) => request.status === "rejected");
     setError(failures.length ? "Some dashboard data could not be refreshed. Check that the API is running." : "");
@@ -112,6 +115,25 @@ function App() {
       </section>
 
       {error && <div className="notice notice-error" role="alert">{error}</div>}
+
+      <section className="panel devices-panel" aria-label="Monitored devices">
+        <div className="panel-heading">
+          <div><p className="eyebrow">FLEET</p><h2>Monitored devices</h2></div>
+          <span className="sample-count">{devices.length} {devices.length === 1 ? "device" : "devices"}</span>
+        </div>
+        {devices.length ? (
+          <ul className="device-list">
+            {devices.map((device) => (
+              <li className="device-row" key={device.hostname}>
+                <span className={`device-indicator device-${device.status}`} />
+                <strong>{device.hostname}</strong>
+                <span className={`device-status device-status-${device.status}`}>{device.status}</span>
+                <time dateTime={device.last_seen}>{new Date(device.last_seen).toLocaleString()}</time>
+              </li>
+            ))}
+          </ul>
+        ) : <EmptyState title="No devices reporting" detail="Start the collector on this or another machine to see it here." compact />}
+      </section>
 
       <section className="overview-grid" aria-label="Current system overview">
         <article className={`health-card health-${healthStatus}`}>

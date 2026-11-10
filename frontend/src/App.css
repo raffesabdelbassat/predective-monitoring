@@ -55,6 +55,17 @@ h1 { margin-bottom: 5px; font: 800 25px Manrope, sans-serif; letter-spacing: -.7
 .metric-amber .metric-meter span { background: #e3a341; }
 .content-grid { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(300px, 1fr); gap: 14px; margin-top: 14px; }
 .panel { padding: 18px 19px; }
+.devices-panel { margin-bottom: 14px; }
+.device-list { list-style: none; margin: 12px 0 0; padding: 0; }
+.device-row { display: grid; grid-template-columns: 8px minmax(100px, 1fr) auto minmax(150px, auto); align-items: center; gap: 10px; border-top: 1px solid #edf0f4; padding: 10px 0; }
+.device-indicator { width: 8px; height: 8px; border-radius: 50%; background: #d5a144; }
+.device-online { background: #2bb784; }
+.device-offline { background: #d6656b; }
+.device-row strong { overflow: hidden; color: #4c596a; font-size: 10px; text-overflow: ellipsis; }
+.device-status { color: #718092; font-size: 9px; text-transform: capitalize; }
+.device-status-online { color: #438568; }
+.device-status-offline { color: #b34f56; }
+.device-row time { color: #929eac; text-align: right; font-size: 9px; }
 .panel-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .panel-heading h2 { margin: 0; font: 700 14px Manrope, sans-serif; letter-spacing: -.2px; }
 .sample-count { border: 1px solid #e6eaf0; border-radius: 20px; padding: 5px 9px; color: #7d8999; font-size: 9px; }
@@ -156,6 +167,8 @@ td { max-width: 350px; border-bottom: 1px solid #f0f2f5; padding: 9px 10px 9px 0
   .chart-wrap { height: 220px; }
   .insight-panel { min-height: 185px; }
   .process-panel { grid-column: 1 / -1; }
+  .device-row { grid-template-columns: 8px minmax(80px, 1fr) auto; }
+  .device-row time { grid-column: 2 / -1; text-align: left; }
   .threshold-form { gap: 7px; }
   .capacity-row { grid-template-columns: .8fr 1.3fr 1fr; }
   td, th { min-width: 80px; }
