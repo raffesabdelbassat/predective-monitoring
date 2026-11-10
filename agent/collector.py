@@ -1,4 +1,5 @@
 import os
+import socket
 import sys
 import time
 
@@ -30,6 +31,7 @@ def collect_metrics() -> dict:
     disk = psutil.disk_usage(os.path.abspath(os.sep))
     network = psutil.net_io_counters()
     return {
+        "hostname": socket.gethostname(),
         "cpu_percent": cpu_percent,
         "memory_percent": memory.percent,
         "disk_percent": disk.percent,

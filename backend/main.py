@@ -2,11 +2,12 @@ import asyncio
 import csv
 import io
 import os
+from datetime import timedelta
 
 from fastapi import Body, Depends, FastAPI, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from sqlalchemy import func, text
+from sqlalchemy import func, inspect, text
 from sqlalchemy.orm import Session
 
 from ai import detect_anomalies
@@ -32,6 +33,13 @@ app.add_middleware(
 )
 
 Base.metadata.create_all(bind=engine)
+
+with engine.begin() as connection:
+    metric_columns = {column["name"] for column in inspect(connection).get_columns("metrics")}
+    if "hostname" not in metric_columns:
+        connection.execute(text(
+            "ALTER TABLE metrics ADD COLUMN hostname VARCHAR(255) NOT NULL DEFAULT 'localhost'"
+        ))
 
 
 @app.get("/")
@@ -77,6 +85,25 @@ def latest_metric(db: Session = Depends(get_db)):
     if metric is None:
         return {"message": "No metrics recorded yet"}
     return metric
+
+
+@app.get("/devices")
+def list_devices(db: Session = Depends(get_db)):
+    last_seen_by_host = (
+        db.query(Metric.hostname, func.max(Metric.timestamp).label("last_seen"))
+        .group_by(Metric.hostname)
+        .order_by(Metric.hostname.asc())
+        .all()
+    )
+    offline_before = utcnow() - timedelta(seconds=60)
+    return [
+        {
+            "hostname": hostname,
+            "last_seen": last_seen.isoformat(),
+            "status": "online" if last_seen >= offline_before else "offline",
+        }
+        for hostname, last_seen in last_seen_by_host
+    ]
 
 
 @app.get("/metrics/stats")
@@ -179,11 +206,12 @@ def export_metrics(db: Session = Depends(get_db)):
     rows = db.query(Metric).order_by(Metric.timestamp.asc()).all()
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["id", "timestamp", "cpu_percent", "memory_percent", "disk_percent", "net_bytes_sent", "net_bytes_recv"])
+    writer.writerow(["id", "timestamp", "hostname", "cpu_percent", "memory_percent", "disk_percent", "net_bytes_sent", "net_bytes_recv"])
     for row in rows:
         writer.writerow([
             row.id,
             row.timestamp.isoformat(),
+            row.hostname,
             row.cpu_percent,
             row.memory_percent,
             row.disk_percent,
@@ -214,6 +242,7 @@ async def websocket_metrics(websocket: WebSocket):
                 if latest:
                     payload["latest"] = {
                         "id": latest.id,
+                        "hostname": latest.hostname,
                         "cpu_percent": latest.cpu_percent,
                         "memory_percent": latest.memory_percent,
                         "disk_percent": latest.disk_percent,
