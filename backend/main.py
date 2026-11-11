@@ -75,13 +75,26 @@ def receive_metrics(metrics: MetricIn, db: Session = Depends(get_db)):
 
 
 @app.get("/metrics")
-def list_metrics(limit: int = Query(default=100, ge=1, le=1000), db: Session = Depends(get_db)):
-    return db.query(Metric).order_by(Metric.timestamp.desc()).limit(limit).all()
+def list_metrics(
+    limit: int = Query(default=100, ge=1, le=1000),
+    hostname: str | None = Query(default=None, min_length=1, max_length=255),
+    db: Session = Depends(get_db),
+):
+    query = db.query(Metric)
+    if hostname:
+        query = query.filter(Metric.hostname == hostname)
+    return query.order_by(Metric.timestamp.desc()).limit(limit).all()
 
 
 @app.get("/metrics/latest")
-def latest_metric(db: Session = Depends(get_db)):
-    metric = db.query(Metric).order_by(Metric.timestamp.desc()).first()
+def latest_metric(
+    hostname: str | None = Query(default=None, min_length=1, max_length=255),
+    db: Session = Depends(get_db),
+):
+    query = db.query(Metric)
+    if hostname:
+        query = query.filter(Metric.hostname == hostname)
+    metric = query.order_by(Metric.timestamp.desc()).first()
     if metric is None:
         return {"message": "No metrics recorded yet"}
     return metric
@@ -107,13 +120,19 @@ def list_devices(db: Session = Depends(get_db)):
 
 
 @app.get("/metrics/stats")
-def metrics_stats(db: Session = Depends(get_db)):
-    result = db.query(
+def metrics_stats(
+    hostname: str | None = Query(default=None, min_length=1, max_length=255),
+    db: Session = Depends(get_db),
+):
+    query = db.query(
         func.avg(Metric.cpu_percent),
         func.avg(Metric.memory_percent),
         func.avg(Metric.disk_percent),
         func.count(Metric.id),
-    ).first()
+    )
+    if hostname:
+        query = query.filter(Metric.hostname == hostname)
+    result = query.first()
     return {
         "avg_cpu_percent": round(result[0], 2) if result[0] is not None else None,
         "avg_memory_percent": round(result[1], 2) if result[1] is not None else None,
