@@ -17,6 +17,7 @@ function App() {
   const [failure, setFailure] = useState(null);
   const [processes, setProcesses] = useState([]);
   const [devices, setDevices] = useState([]);
+  const [selectedHostname, setSelectedHostname] = useState("");
   const [config, setConfig] = useState({ cpu_threshold: 90, memory_threshold: 95, disk_threshold: 90 });
   const [configMessage, setConfigMessage] = useState("");
   const [error, setError] = useState("");
@@ -26,9 +27,11 @@ function App() {
 
   const fetchData = useCallback(async () => {
     setRefreshing(true);
+    const hostnameParam = selectedHostname ? `&hostname=${encodeURIComponent(selectedHostname)}` : "";
+    const latestHostnameParam = selectedHostname ? `?hostname=${encodeURIComponent(selectedHostname)}` : "";
     const requests = await Promise.allSettled([
-      axios.get(`${API_URL}/metrics?limit=100`),
-      axios.get(`${API_URL}/metrics/latest`),
+      axios.get(`${API_URL}/metrics?limit=100${hostnameParam}`),
+      axios.get(`${API_URL}/metrics/latest${latestHostnameParam}`),
       axios.get(`${API_URL}/alerts`),
       axios.get(`${API_URL}/predictions/anomaly`),
       axios.get(`${API_URL}/predictions/forecast?hours=${hoursAhead}`),
@@ -61,7 +64,7 @@ function App() {
     setError(failures.length ? "Some dashboard data could not be refreshed. Check that the API is running." : "");
     if (!failures.length) setLastUpdated(new Date());
     setRefreshing(false);
-  }, [hoursAhead]);
+  }, [hoursAhead, selectedHostname]);
 
   useEffect(() => {
     fetchData();
@@ -111,7 +114,15 @@ function App() {
           <h1>Predictive monitoring</h1>
           <p className="subtitle">System health, resource trends, and alerts in one place.</p>
         </div>
-        <p className="updated-at">Last reading <strong>{timestamp}</strong></p>
+        <div className="heading-actions">
+          <label className="device-filter">Device
+            <select aria-label="Filter metrics by device" value={selectedHostname} onChange={(event) => setSelectedHostname(event.target.value)}>
+              <option value="">All devices</option>
+              {devices.map((device) => <option key={device.hostname} value={device.hostname}>{device.hostname}</option>)}
+            </select>
+          </label>
+          <p className="updated-at">Last reading <strong>{timestamp}</strong></p>
+        </div>
       </section>
 
       {error && <div className="notice notice-error" role="alert">{error}</div>}
