@@ -22,6 +22,9 @@ h1 { margin-bottom: 5px; font: 800 25px Manrope, sans-serif; letter-spacing: -.7
 .subtitle { margin-bottom: 0; color: #8490a0; font-size: 12px; }
 .updated-at { margin: 0 0 2px; color: #8b96a5; text-align: right; font-size: 10px; }
 .updated-at strong { display: block; margin-top: 4px; color: #536173; font-size: 11px; font-weight: 600; }
+.heading-actions { display: flex; align-items: end; gap: 16px; }
+.device-filter { display: grid; gap: 5px; color: #8b96a5; font-size: 9px; }
+.device-filter select { max-width: 190px; border: 1px solid #dfe5ec; border-radius: 6px; padding: 7px 9px; color: #46566a; background: #fff; font-size: 10px; }
 .notice { margin: 0 0 18px; border-radius: 8px; padding: 12px 15px; font-size: 12px; }
 .notice-error { color: #963d43; border: 1px solid #f0d5d7; background: #fff3f3; }
 .overview-grid { display: grid; grid-template-columns: 1.1fr repeat(3, 1fr); gap: 14px; }
@@ -154,8 +157,9 @@ td { max-width: 350px; border-bottom: 1px solid #f0f2f5; padding: 9px 10px 9px 0
   .live-dot { width: 7px; height: 7px; }
   .refresh-button { margin-left: 6px; padding: 7px 9px; font-size: 10px; }
   .page-heading { align-items: start; gap: 12px; flex-direction: column; margin: 22px 0 16px; }
+  .heading-actions { width: 100%; align-items: start; justify-content: space-between; }
+  .updated-at { text-align: right; }
   h1 { font-size: 22px; }
-  .updated-at { text-align: left; }
   .overview-grid, .insight-grid { grid-template-columns: 1fr 1fr; gap: 9px; }
   .health-card, .metric-card { min-height: 150px; padding: 14px; }
   .health-score { font-size: 34px; }
