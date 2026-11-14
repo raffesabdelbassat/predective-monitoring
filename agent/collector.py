@@ -52,6 +52,7 @@ def send_metrics(metrics: dict):
         process_payload = [
             {
                 "pid": process["pid"],
+                "hostname": metrics["hostname"],
                 "name": process.get("name") or "Unknown",
                 "cpu_percent": process.get("cpu_percent") or 0,
                 "memory_percent": process.get("memory_percent") or 0,

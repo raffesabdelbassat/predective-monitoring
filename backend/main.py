@@ -40,6 +40,11 @@ with engine.begin() as connection:
         connection.execute(text(
             "ALTER TABLE metrics ADD COLUMN hostname VARCHAR(255) NOT NULL DEFAULT 'localhost'"
         ))
+    process_columns = {column["name"] for column in inspect(connection).get_columns("process_snapshots")}
+    if "hostname" not in process_columns:
+        connection.execute(text(
+            "ALTER TABLE process_snapshots ADD COLUMN hostname VARCHAR(255) NOT NULL DEFAULT 'localhost'"
+        ))
 
 
 @app.get("/")
@@ -207,13 +212,19 @@ def receive_processes(processes: list[ProcessIn] = Body(..., max_length=100), db
 
 
 @app.get("/processes")
-def list_processes(limit: int = Query(default=10, ge=1, le=100), db: Session = Depends(get_db)):
-    latest = db.query(func.max(ProcessSnapshot.timestamp)).scalar()
+def list_processes(
+    limit: int = Query(default=10, ge=1, le=100),
+    hostname: str | None = Query(default=None, min_length=1, max_length=255),
+    db: Session = Depends(get_db),
+):
+    query = db.query(ProcessSnapshot)
+    if hostname:
+        query = query.filter(ProcessSnapshot.hostname == hostname)
+    latest = query.with_entities(func.max(ProcessSnapshot.timestamp)).scalar()
     if latest is None:
         return []
     return (
-        db.query(ProcessSnapshot)
-        .filter(ProcessSnapshot.timestamp == latest)
+        query.filter(ProcessSnapshot.timestamp == latest)
         .order_by(ProcessSnapshot.cpu_percent.desc())
         .limit(limit)
         .all()

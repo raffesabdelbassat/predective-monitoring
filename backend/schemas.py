@@ -11,6 +11,7 @@ class MetricIn(BaseModel):
 
 
 class ProcessIn(BaseModel):
+    hostname: str = Field(default="localhost", min_length=1, max_length=255)
     pid: int = Field(ge=0)
     name: str = Field(min_length=1, max_length=255)
     cpu_percent: float = Field(ge=0)

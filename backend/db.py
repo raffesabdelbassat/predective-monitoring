@@ -43,6 +43,7 @@ class ProcessSnapshot(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     timestamp = Column(DateTime, default=utcnow, nullable=False, index=True)
+    hostname = Column(String(255), nullable=False, default="localhost", server_default="localhost")
     pid = Column(Integer, nullable=False)
     name = Column(String(255), nullable=False)
     cpu_percent = Column(Float, nullable=False)

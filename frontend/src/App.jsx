@@ -38,7 +38,7 @@ function App() {
       axios.get(`${API_URL}/health/score`),
       axios.get(`${API_URL}/alerts/history?limit=50`),
       axios.get(`${API_URL}/predictions/failure`),
-      axios.get(`${API_URL}/processes?limit=5`),
+      axios.get(`${API_URL}/processes?limit=5${hostnameParam}`),
       axios.get(`${API_URL}/alerts/config`),
       axios.get(`${API_URL}/devices`),
     ]);
