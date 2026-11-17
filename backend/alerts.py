@@ -18,14 +18,17 @@ def get_alert_config(db: Session) -> AlertConfig:
     return config
 
 
-def check_alerts(db: Session):
+def check_alerts(db: Session, hostname: str | None = None):
     alerts = []
-    latest = db.query(Metric).order_by(Metric.timestamp.desc()).first()
+    query = db.query(Metric)
+    if hostname:
+        query = query.filter(Metric.hostname == hostname)
+    latest = query.order_by(Metric.timestamp.desc()).first()
     if latest is None:
         return {"alert_count": 0, "alerts": []}
 
     config = get_alert_config(db)
-    anomaly_result = detect_anomalies(db)
+    anomaly_result = detect_anomalies(db, hostname=hostname)
     if anomaly_result.get("is_anomaly"):
         alerts.append({
             "type": "anomaly",
@@ -38,7 +41,7 @@ def check_alerts(db: Session):
             ),
         })
 
-    forecast_result = forecast_cpu(db, hours_ahead=1)
+    forecast_result = forecast_cpu(db, hours_ahead=1, hostname=hostname)
     predicted_cpu = forecast_result.get("predicted_cpu_percent")
     if predicted_cpu is not None and predicted_cpu >= config.cpu_threshold:
         alerts.append({
@@ -59,7 +62,7 @@ def check_alerts(db: Session):
                 "message": f"{resource} usage is {value}% (threshold {threshold}%).",
             })
 
-    predictions = predict_failures(db)
+    predictions = predict_failures(db, hostname=hostname)
     for resource, warning_hours, severity in (("memory", 6, "critical"), ("disk", 24, "warning")):
         prediction = predictions[resource]
         hours_to_limit = prediction.get("hours_to_limit")
@@ -78,6 +81,10 @@ def check_alerts(db: Session):
                 ),
             })
 
+    if hostname:
+        for alert in alerts:
+            alert["message"] = f"[{hostname}] {alert['message']}"
+
     now = utcnow()
     for alert in alerts:
         existing = (
@@ -91,6 +98,7 @@ def check_alerts(db: Session):
                 alert_type=alert["type"],
                 severity=alert["severity"],
                 message=alert["message"],
+                hostname=hostname,
             ))
     db.commit()
 

@@ -33,13 +33,11 @@ def _time_to_limit(timestamps, values, limit=100.0):
 
     return result
 
-def predict_failures(db: Session, window: int = 200):
-    rows = (
-        db.query(Metric)
-        .order_by(Metric.timestamp.desc())
-        .limit(window)
-        .all()
-    )
+def predict_failures(db: Session, window: int = 200, hostname: str | None = None):
+    query = db.query(Metric)
+    if hostname:
+        query = query.filter(Metric.hostname == hostname)
+    rows = query.order_by(Metric.timestamp.desc()).limit(window).all()
     rows.reverse()
 
     timestamps = [r.timestamp for r in rows]

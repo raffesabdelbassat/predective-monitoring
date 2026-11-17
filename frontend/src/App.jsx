@@ -32,12 +32,12 @@ function App() {
     const requests = await Promise.allSettled([
       axios.get(`${API_URL}/metrics?limit=100${hostnameParam}`),
       axios.get(`${API_URL}/metrics/latest${latestHostnameParam}`),
-      axios.get(`${API_URL}/alerts`),
-      axios.get(`${API_URL}/predictions/anomaly`),
-      axios.get(`${API_URL}/predictions/forecast?hours=${hoursAhead}`),
-      axios.get(`${API_URL}/health/score`),
-      axios.get(`${API_URL}/alerts/history?limit=50`),
-      axios.get(`${API_URL}/predictions/failure`),
+      axios.get(`${API_URL}/alerts${latestHostnameParam}`),
+      axios.get(`${API_URL}/predictions/anomaly${latestHostnameParam}`),
+      axios.get(`${API_URL}/predictions/forecast?hours=${hoursAhead}${hostnameParam}`),
+      axios.get(`${API_URL}/health/score${latestHostnameParam}`),
+      axios.get(`${API_URL}/alerts/history?limit=50${hostnameParam}`),
+      axios.get(`${API_URL}/predictions/failure${latestHostnameParam}`),
       axios.get(`${API_URL}/processes?limit=5${hostnameParam}`),
       axios.get(`${API_URL}/alerts/config`),
       axios.get(`${API_URL}/devices`),
@@ -228,7 +228,7 @@ function App() {
 
       <section className="lower-grid">
         <article className="panel table-panel">
-          <div className="panel-heading"><div><p className="eyebrow">RECENT EVENTS</p><h2>Alert history</h2></div><a className="text-link" href={`${API_URL}/alerts/history`} target="_blank" rel="noreferrer">View API ↗</a></div>
+          <div className="panel-heading"><div><p className="eyebrow">RECENT EVENTS</p><h2>Alert history</h2></div><a className="text-link" href={`${API_URL}/alerts/history${selectedHostname ? `?hostname=${encodeURIComponent(selectedHostname)}` : ""}`} target="_blank" rel="noreferrer">View API ↗</a></div>
           {alertHistory.length ? <div className="table-scroll"><table><thead><tr><th>Time</th><th>Type</th><th>Severity</th><th>Details</th></tr></thead><tbody>{alertHistory.slice(0, 10).map((alert) => <tr key={alert.id}><td>{new Date(alert.timestamp).toLocaleString()}</td><td>{alert.alert_type}</td><td><span className={`severity-tag severity-tag-${alert.severity}`}>{alert.severity}</span></td><td>{alert.message}</td></tr>)}</tbody></table></div> : <EmptyState title="No alert history yet" detail="Events will appear here when a threshold or prediction triggers an alert." compact />}
           <a className="export-button" href={`${API_URL}/metrics/export`} download>↓ <span>Export metrics CSV</span></a>
         </article>

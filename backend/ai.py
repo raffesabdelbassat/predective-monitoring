@@ -3,8 +3,11 @@ from sklearn.ensemble import IsolationForest
 from sqlalchemy.orm import Session
 from db import Metric
 
-def detect_anomalies(db: Session):
-    rows = db.query(Metric).order_by(Metric.timestamp.asc()).all()
+def detect_anomalies(db: Session, hostname: str | None = None):
+    query = db.query(Metric)
+    if hostname:
+        query = query.filter(Metric.hostname == hostname)
+    rows = query.order_by(Metric.timestamp.asc()).all()
     if len(rows) < 10:
         return {"status": "not enough data", "min_required": 10, "have": len(rows)}
 

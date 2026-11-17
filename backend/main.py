@@ -45,6 +45,9 @@ with engine.begin() as connection:
         connection.execute(text(
             "ALTER TABLE process_snapshots ADD COLUMN hostname VARCHAR(255) NOT NULL DEFAULT 'localhost'"
         ))
+    alert_columns = {column["name"] for column in inspect(connection).get_columns("alert_history")}
+    if "hostname" not in alert_columns:
+        connection.execute(text("ALTER TABLE alert_history ADD COLUMN hostname VARCHAR(255)"))
 
 
 @app.get("/")
@@ -147,28 +150,48 @@ def metrics_stats(
 
 
 @app.get("/predictions/anomaly")
-def get_anomaly_check(db: Session = Depends(get_db)):
-    return detect_anomalies(db)
+def get_anomaly_check(
+    hostname: str | None = Query(default=None, min_length=1, max_length=255),
+    db: Session = Depends(get_db),
+):
+    return detect_anomalies(db, hostname=hostname)
 
 
 @app.get("/predictions/forecast")
-def get_forecast(hours: int = Query(default=1, ge=1, le=168), db: Session = Depends(get_db)):
-    return forecast_cpu(db, hours_ahead=hours)
+def get_forecast(
+    hours: int = Query(default=1, ge=1, le=168),
+    hostname: str | None = Query(default=None, min_length=1, max_length=255),
+    db: Session = Depends(get_db),
+):
+    return forecast_cpu(db, hours_ahead=hours, hostname=hostname)
 
 
 @app.get("/predictions/failure")
-def get_failure_prediction(db: Session = Depends(get_db)):
-    return predict_failures(db)
+def get_failure_prediction(
+    hostname: str | None = Query(default=None, min_length=1, max_length=255),
+    db: Session = Depends(get_db),
+):
+    return predict_failures(db, hostname=hostname)
 
 
 @app.get("/alerts")
-def get_alerts(db: Session = Depends(get_db)):
-    return check_alerts(db)
+def get_alerts(
+    hostname: str | None = Query(default=None, min_length=1, max_length=255),
+    db: Session = Depends(get_db),
+):
+    return check_alerts(db, hostname=hostname)
 
 
 @app.get("/alerts/history")
-def alert_history(limit: int = Query(default=50, ge=1, le=500), db: Session = Depends(get_db)):
-    return db.query(AlertHistory).order_by(AlertHistory.timestamp.desc()).limit(limit).all()
+def alert_history(
+    limit: int = Query(default=50, ge=1, le=500),
+    hostname: str | None = Query(default=None, min_length=1, max_length=255),
+    db: Session = Depends(get_db),
+):
+    query = db.query(AlertHistory)
+    if hostname:
+        query = query.filter(AlertHistory.hostname == hostname)
+    return query.order_by(AlertHistory.timestamp.desc()).limit(limit).all()
 
 
 @app.get("/alerts/config")
@@ -196,8 +219,11 @@ def update_alert_config(config_in: AlertConfigIn, db: Session = Depends(get_db))
 
 
 @app.get("/health/score")
-def get_health_score(db: Session = Depends(get_db)):
-    return calculate_health_score(db)
+def get_health_score(
+    hostname: str | None = Query(default=None, min_length=1, max_length=255),
+    db: Session = Depends(get_db),
+):
+    return calculate_health_score(db, hostname=hostname)
 
 
 @app.post("/processes", status_code=201)

@@ -55,6 +55,7 @@ class AlertHistory(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     timestamp = Column(DateTime, default=utcnow, nullable=False, index=True)
+    hostname = Column(String(255), nullable=True)
     alert_type = Column(String(50), nullable=False)
     severity = Column(String(20), nullable=False)
     message = Column(String, nullable=False)
