@@ -139,6 +139,7 @@ function App() {
                 <span className={`device-indicator device-${device.status}`} />
                 <strong>{device.hostname}</strong>
                 <span className={`device-status device-status-${device.status}`}>{device.status}</span>
+                <span className="device-usage">CPU {Number(device.cpu_percent).toFixed(0)}% · MEM {Number(device.memory_percent).toFixed(0)}% · DISK {Number(device.disk_percent).toFixed(0)}%</span>
                 <time dateTime={device.last_seen}>{new Date(device.last_seen).toLocaleString()}</time>
               </li>
             ))}

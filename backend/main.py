@@ -110,20 +110,19 @@ def latest_metric(
 
 @app.get("/devices")
 def list_devices(db: Session = Depends(get_db)):
-    last_seen_by_host = (
-        db.query(Metric.hostname, func.max(Metric.timestamp).label("last_seen"))
-        .group_by(Metric.hostname)
-        .order_by(Metric.hostname.asc())
-        .all()
-    )
+    latest_ids = db.query(func.max(Metric.id).label("id")).group_by(Metric.hostname).subquery()
+    latest_metrics = db.query(Metric).join(latest_ids, Metric.id == latest_ids.c.id).all()
     offline_before = utcnow() - timedelta(seconds=60)
     return [
         {
-            "hostname": hostname,
-            "last_seen": last_seen.isoformat(),
-            "status": "online" if last_seen >= offline_before else "offline",
+            "hostname": metric.hostname,
+            "last_seen": metric.timestamp.isoformat(),
+            "status": "online" if metric.timestamp >= offline_before else "offline",
+            "cpu_percent": metric.cpu_percent,
+            "memory_percent": metric.memory_percent,
+            "disk_percent": metric.disk_percent,
         }
-        for hostname, last_seen in last_seen_by_host
+        for metric in sorted(latest_metrics, key=lambda item: item.hostname.lower())
     ]
 
 
