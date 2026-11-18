@@ -230,7 +230,7 @@ function App() {
         <article className="panel table-panel">
           <div className="panel-heading"><div><p className="eyebrow">RECENT EVENTS</p><h2>Alert history</h2></div><a className="text-link" href={`${API_URL}/alerts/history${selectedHostname ? `?hostname=${encodeURIComponent(selectedHostname)}` : ""}`} target="_blank" rel="noreferrer">View API ↗</a></div>
           {alertHistory.length ? <div className="table-scroll"><table><thead><tr><th>Time</th><th>Type</th><th>Severity</th><th>Details</th></tr></thead><tbody>{alertHistory.slice(0, 10).map((alert) => <tr key={alert.id}><td>{new Date(alert.timestamp).toLocaleString()}</td><td>{alert.alert_type}</td><td><span className={`severity-tag severity-tag-${alert.severity}`}>{alert.severity}</span></td><td>{alert.message}</td></tr>)}</tbody></table></div> : <EmptyState title="No alert history yet" detail="Events will appear here when a threshold or prediction triggers an alert." compact />}
-          <a className="export-button" href={`${API_URL}/metrics/export`} download>↓ <span>Export metrics CSV</span></a>
+          <a className="export-button" href={`${API_URL}/metrics/export${selectedHostname ? `?hostname=${encodeURIComponent(selectedHostname)}` : ""}`} download>↓ <span>Export metrics CSV</span></a>
         </article>
 
         <article className="panel settings-panel">

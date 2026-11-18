@@ -258,8 +258,14 @@ def list_processes(
 
 
 @app.get("/metrics/export")
-def export_metrics(db: Session = Depends(get_db)):
-    rows = db.query(Metric).order_by(Metric.timestamp.asc()).all()
+def export_metrics(
+    hostname: str | None = Query(default=None, min_length=1, max_length=255),
+    db: Session = Depends(get_db),
+):
+    query = db.query(Metric)
+    if hostname:
+        query = query.filter(Metric.hostname == hostname)
+    rows = query.order_by(Metric.timestamp.asc()).all()
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(["id", "timestamp", "hostname", "cpu_percent", "memory_percent", "disk_percent", "net_bytes_sent", "net_bytes_recv"])
