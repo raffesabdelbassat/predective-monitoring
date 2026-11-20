@@ -22,6 +22,7 @@ The collector sends machine readings to the API. The API stores them in Timescal
 - Review historical charts, active alerts, and alert history.
 - See CPU forecasts, anomaly checks, and resource capacity estimates.
 - Adjust alert thresholds and export metric history to CSV.
+- Spot stale telemetry: devices go offline and the health card turns stale after 60 seconds without a reading.
 - Connect to the API over HTTP or stream updates over WebSocket.
 
 ### Project links

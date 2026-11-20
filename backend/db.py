@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import BigInteger, Column, DateTime, Float, Integer, String, create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
@@ -10,6 +10,7 @@ DATABASE_URL = os.getenv(
     "DATABASE_URL",
     "postgresql://monitor_user:monitor_pass@127.0.0.1:5433/monitor_db",
 )
+METRIC_STALE_AFTER = timedelta(seconds=60)
 engine_options = {"pool_pre_ping": True}
 if DATABASE_URL.startswith("sqlite"):
     engine_options["connect_args"] = {"check_same_thread": False}

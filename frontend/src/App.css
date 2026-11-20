@@ -32,10 +32,12 @@ h1 { margin-bottom: 5px; font: 800 25px Manrope, sans-serif; letter-spacing: -.7
 .health-card { min-height: 169px; padding: 17px 19px 14px; color: white; background: linear-gradient(130deg, #426bdd 0%, #4a7ce9 100%); border-color: transparent; }
 .health-degraded { background: linear-gradient(130deg, #c58a35, #dfa744); }
 .health-critical { background: linear-gradient(130deg, #c64d5c, #de6874); }
+.health-stale { background: linear-gradient(130deg, #66758a, #8291a6); }
 .card-topline { display: flex; justify-content: space-between; align-items: center; color: #ffffffc9; font-size: 11px; }
 .health-dot { background: #7ce0b3; box-shadow: 0 0 0 4px #ffffff24; }
 .health-degraded .health-dot { background: #fff0b1; }
 .health-critical .health-dot { background: #ffd4d6; }
+.health-stale .health-dot { background: #f8d47b; }
 .health-score { margin-top: 17px; font: 800 38px Manrope, sans-serif; line-height: 1; letter-spacing: -1.5px; }
 .health-score small { padding-left: 4px; color: #ffffffad; font-size: 13px; font-weight: 600; letter-spacing: 0; }
 .health-caption { margin: 5px 0 13px; color: #ffffffd1; font-size: 11px; text-transform: capitalize; }

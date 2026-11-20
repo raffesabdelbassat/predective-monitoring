@@ -91,6 +91,11 @@ function App() {
 
   const healthScore = health?.score;
   const healthStatus = healthScore == null ? "waiting" : health.status;
+  const healthCaption = healthStatus === "waiting"
+    ? "Waiting for readings"
+    : healthStatus === "stale"
+      ? "No reading received in over 60 seconds"
+      : `System ${healthStatus}`;
   const timestamp = latest?.timestamp ? new Date(latest.timestamp).toLocaleString() : "No readings yet";
 
   return (
@@ -151,7 +156,7 @@ function App() {
         <article className={`health-card health-${healthStatus}`}>
           <div className="card-topline"><span>Overall health</span><span className="health-dot" /></div>
           <div className="health-score">{healthScore == null ? "—" : healthScore}<small>{healthScore == null ? "" : "/100"}</small></div>
-          <p className="health-caption">{healthStatus === "waiting" ? "Waiting for readings" : `System ${healthStatus}`}</p>
+          <p className="health-caption">{healthCaption}</p>
           <div className="health-meter"><span style={{ width: `${healthScore ?? 0}%` }} /></div>
           <p className="health-foot">{health?.active_alerts ?? alerts.alert_count} active alerts</p>
         </article>

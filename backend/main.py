@@ -2,7 +2,6 @@ import asyncio
 import csv
 import io
 import os
-from datetime import timedelta
 
 from fastapi import Body, Depends, FastAPI, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,7 +11,17 @@ from sqlalchemy.orm import Session
 
 from ai import detect_anomalies
 from alerts import check_alerts, get_alert_config
-from db import AlertHistory, Base, Metric, ProcessSnapshot, SessionLocal, engine, get_db, utcnow
+from db import (
+    AlertHistory,
+    Base,
+    METRIC_STALE_AFTER,
+    Metric,
+    ProcessSnapshot,
+    SessionLocal,
+    engine,
+    get_db,
+    utcnow,
+)
 from failure import predict_failures
 from forecast import forecast_cpu
 from health import calculate_health_score
@@ -119,7 +128,7 @@ def list_devices(db: Session = Depends(get_db)):
     ).subquery()
     latest_ids = db.query(ranked_metrics.c.id).filter(ranked_metrics.c.position == 1).subquery()
     latest_metrics = db.query(Metric).join(latest_ids, Metric.id == latest_ids.c.id).all()
-    offline_before = utcnow() - timedelta(seconds=60)
+    offline_before = utcnow() - METRIC_STALE_AFTER
     return [
         {
             "hostname": metric.hostname,

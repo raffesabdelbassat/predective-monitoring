@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from db import Metric
+from db import METRIC_STALE_AFTER, Metric, utcnow
 from alerts import check_alerts
 
 def calculate_health_score(db: Session, hostname: str | None = None):
@@ -9,6 +9,8 @@ def calculate_health_score(db: Session, hostname: str | None = None):
     latest = query.order_by(Metric.timestamp.desc()).first()
     if not latest:
         return {"score": None, "status": "no data"}
+
+    telemetry_is_stale = latest.timestamp < utcnow() - METRIC_STALE_AFTER
 
     score = 100
     score -= max(0, latest.cpu_percent - 70) * 0.5
@@ -20,7 +22,9 @@ def calculate_health_score(db: Session, hostname: str | None = None):
 
     score = max(0, min(100, round(score, 1)))
 
-    if score >= 80:
+    if telemetry_is_stale:
+        status = "stale"
+    elif score >= 80:
         status = "healthy"
     elif score >= 50:
         status = "degraded"
