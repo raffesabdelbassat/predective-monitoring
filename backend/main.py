@@ -110,7 +110,14 @@ def latest_metric(
 
 @app.get("/devices")
 def list_devices(db: Session = Depends(get_db)):
-    latest_ids = db.query(func.max(Metric.id).label("id")).group_by(Metric.hostname).subquery()
+    ranked_metrics = db.query(
+        Metric.id.label("id"),
+        func.row_number().over(
+            partition_by=Metric.hostname,
+            order_by=(Metric.timestamp.desc(), Metric.id.desc()),
+        ).label("position"),
+    ).subquery()
+    latest_ids = db.query(ranked_metrics.c.id).filter(ranked_metrics.c.position == 1).subquery()
     latest_metrics = db.query(Metric).join(latest_ids, Metric.id == latest_ids.c.id).all()
     offline_before = utcnow() - timedelta(seconds=60)
     return [
