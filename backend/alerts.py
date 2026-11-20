@@ -3,7 +3,7 @@ from datetime import timedelta
 from sqlalchemy.orm import Session
 
 from ai import detect_anomalies
-from db import AlertConfig, AlertHistory, Metric, utcnow
+from db import AlertConfig, AlertHistory, METRIC_STALE_AFTER, Metric, utcnow
 from failure import predict_failures
 from forecast import forecast_cpu
 
@@ -39,7 +39,15 @@ def check_alerts(db: Session, hostname: str | None = None):
     if latest is None:
         return {"alert_count": 0, "alerts": []}
 
+    now = utcnow()
     config = get_alert_config(db)
+    if latest.timestamp < now - METRIC_STALE_AFTER:
+        alerts.append({
+            "type": "telemetry",
+            "severity": "critical",
+            "message": "No metrics received in over 60 seconds.",
+        })
+
     anomaly_result = detect_anomalies(db, hostname=hostname)
     if anomaly_result.get("is_anomaly"):
         alerts.append({
@@ -97,7 +105,6 @@ def check_alerts(db: Session, hostname: str | None = None):
         for alert in alerts:
             alert["message"] = f"[{hostname}] {alert['message']}"
 
-    now = utcnow()
     for alert in alerts:
         existing = (
             db.query(AlertHistory)
