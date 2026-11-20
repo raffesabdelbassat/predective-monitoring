@@ -11,6 +11,9 @@ button, select { cursor: pointer; }
 .topbar-meta { display: flex; align-items: center; gap: 9px; color: #627081; font-size: 12px; }
 .live-dot, .health-dot, .severity-dot { width: 8px; height: 8px; border-radius: 50%; background: #2bb784; }
 .live-dot { box-shadow: 0 0 0 4px #2bb7841b; }
+.live-dot-stale { background: #e3a341; box-shadow: 0 0 0 4px #e3a34124; }
+.live-dot-error { background: #d45460; box-shadow: 0 0 0 4px #d4546024; }
+.live-dot-waiting { background: #94a0af; box-shadow: 0 0 0 4px #94a0af24; }
 .refresh-button { margin-left: 17px; border: 1px solid #dfe5ec; border-radius: 7px; padding: 8px 12px; color: #344254; background: white; font-size: 12px; font-weight: 600; }
 .refresh-button:hover:not(:disabled), .export-button:hover { border-color: #bdcbe0; background: #f9fbfd; }
 .refresh-button:disabled { cursor: wait; opacity: .65; }

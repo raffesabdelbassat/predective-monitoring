@@ -103,6 +103,20 @@ function App() {
     : anomaly?.status === "not enough data"
       ? `Anomaly check needs ${anomaly.min_required} readings`
       : "No unusual behavior detected";
+  const monitoringState = error
+    ? "Data refresh issue"
+    : healthStatus === "stale"
+      ? "Telemetry stale"
+      : healthStatus === "waiting"
+        ? "Waiting for data"
+        : "Live monitoring";
+  const monitoringStateClass = error
+    ? "live-dot-error"
+    : healthStatus === "stale"
+      ? "live-dot-stale"
+      : healthStatus === "waiting"
+        ? "live-dot-waiting"
+        : "";
   const timestamp = latest?.timestamp ? new Date(latest.timestamp).toLocaleString() : "No readings yet";
 
   return (
@@ -113,7 +127,7 @@ function App() {
           <span>Pulse<span className="brand-light">Monitor</span></span>
         </a>
         <div className="topbar-meta">
-          <span className="live-dot" /> Live monitoring
+          <span className={`live-dot ${monitoringStateClass}`} /> {monitoringState}
           <button className="refresh-button" onClick={fetchData} disabled={refreshing}>
             <span aria-hidden="true">↻</span> {refreshing ? "Refreshing" : "Refresh"}
           </button>
