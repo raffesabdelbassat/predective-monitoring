@@ -96,6 +96,13 @@ function App() {
     : healthStatus === "stale"
       ? "No reading received in over 60 seconds"
       : `System ${healthStatus}`;
+  const anomalySummary = anomaly?.is_anomaly
+    ? selectedHostname
+      ? "Unusual behavior in latest reading"
+      : `Unusual behavior on ${anomaly.anomalous_devices?.join(", ") || "a monitored device"}`
+    : anomaly?.status === "not enough data"
+      ? `Anomaly check needs ${anomaly.min_required} readings`
+      : "No unusual behavior detected";
   const timestamp = latest?.timestamp ? new Date(latest.timestamp).toLocaleString() : "No readings yet";
 
   return (
@@ -197,7 +204,7 @@ function App() {
           ) : <EmptyState title="All clear" detail="No active alerts at the moment." compact />}
           <div className={`anomaly-summary ${anomaly?.is_anomaly ? "anomaly-detected" : ""}`}>
             <span className="anomaly-indicator" />
-            <span>{anomaly?.is_anomaly ? "Unusual behavior in latest reading" : anomaly?.status === "not enough data" ? `Anomaly check needs ${anomaly.min_required} readings` : "No unusual behavior detected"}</span>
+            <span>{anomalySummary}</span>
           </div>
         </article>
       </section>
@@ -210,7 +217,7 @@ function App() {
             </select>
           </div>
           {forecast?.predicted_cpu_percent !== undefined ? (
-            <div className="forecast-value"><strong>{forecast.predicted_cpu_percent}<small>%</small></strong><span className={`trend trend-${forecast.trend}`}>{trendLabel(forecast.trend)}</span><p>Estimated CPU usage in {forecast.predicted_cpu_in_hours} hour{forecast.predicted_cpu_in_hours === 1 ? "" : "s"}</p></div>
+            <div className="forecast-value"><strong>{forecast.predicted_cpu_percent}<small>%</small></strong><span className={`trend trend-${forecast.trend}`}>{trendLabel(forecast.trend)}</span><p>Estimated CPU usage in {forecast.predicted_cpu_in_hours} hour{forecast.predicted_cpu_in_hours === 1 ? "" : "s"}{!selectedHostname && forecast.hostname ? ` · ${forecast.hostname}` : ""}</p></div>
           ) : <EmptyState title="Forecast unavailable" detail={forecast?.status || "Collect at least 10 readings first."} compact />}
         </article>
 
@@ -220,7 +227,7 @@ function App() {
             <div className="capacity-list">
               {["cpu", "memory", "disk"].map((resource) => {
                 const prediction = failure[resource];
-                return <div className="capacity-row" key={resource}><span>{resourceLabel(resource)}</span><strong>{prediction?.status === "not enough data" ? "Collecting data" : prediction?.hours_to_limit == null ? "Stable" : `${prediction.hours_to_limit}h`}</strong><small>{prediction?.trend || "—"}</small></div>;
+                return <div className="capacity-row" key={resource}><span>{resourceLabel(resource)}</span><strong>{prediction?.status === "not enough data" ? "Collecting data" : prediction?.hours_to_limit == null ? "Stable" : `${prediction.hours_to_limit}h`}</strong><small>{!selectedHostname && prediction?.hostname ? `${prediction.hostname} · ` : ""}{prediction?.trend || "—"}</small></div>;
               })}
             </div>
           ) : <EmptyState title="Capacity outlook unavailable" detail="Collect at least 10 readings first." compact />}

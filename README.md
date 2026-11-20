@@ -102,7 +102,7 @@ BACKEND_URL="http://192.168.1.50:8000" python agent/collector.py
 | `GET` | `/metrics/export` | Download metric history as CSV |
 | WebSocket | `/ws/metrics` | Receive current readings and alerts every five seconds |
 
-Forecast and anomaly endpoints need at least ten metric samples and analyze up to the latest 500 readings per device. Capacity estimates use up to 200 recent readings and report a trend confidence; treat them as operational guidance rather than a guaranteed failure time.
+Forecast and anomaly endpoints need at least ten metric samples and analyze up to the latest 500 readings per device. In the all-devices view, anomaly checks run per device, the CPU forecast shows the highest device forecast, and each capacity estimate shows the device with the shortest predicted time to its limit. Capacity estimates use up to 200 recent readings and report a trend confidence; treat them as operational guidance rather than a guaranteed failure time.
 
 ## Run checks
 

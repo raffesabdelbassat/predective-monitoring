@@ -59,6 +59,14 @@ with engine.begin() as connection:
         connection.execute(text("ALTER TABLE alert_history ADD COLUMN hostname VARCHAR(255)"))
 
 
+def metric_hostnames(db: Session) -> list[str]:
+    return [
+        hostname
+        for (hostname,) in db.query(Metric.hostname).distinct().order_by(Metric.hostname).all()
+        if hostname
+    ]
+
+
 @app.get("/")
 def read_root():
     return {"message": "Predictive Monitoring API is running", "docs": "/docs"}
@@ -169,7 +177,24 @@ def get_anomaly_check(
     hostname: str | None = Query(default=None, min_length=1, max_length=255),
     db: Session = Depends(get_db),
 ):
-    return detect_anomalies(db, hostname=hostname)
+    if hostname:
+        return detect_anomalies(db, hostname=hostname)
+
+    results = [(device, detect_anomalies(db, hostname=device)) for device in metric_hostnames(db)]
+    ready = [(device, result) for device, result in results if result.get("is_anomaly") is not None]
+    anomalous_devices = [device for device, result in ready if result["is_anomaly"]]
+    have = max(
+        (result.get("total_points_analyzed", result.get("have", 0)) for _, result in results),
+        default=0,
+    )
+    return {
+        "status": "ok" if ready else "not enough data",
+        "min_required": 10,
+        "have": have,
+        "is_anomaly": bool(anomalous_devices),
+        "anomalous_devices": anomalous_devices,
+        "devices_analyzed": len(ready),
+    }
 
 
 @app.get("/predictions/forecast")
@@ -178,7 +203,24 @@ def get_forecast(
     hostname: str | None = Query(default=None, min_length=1, max_length=255),
     db: Session = Depends(get_db),
 ):
-    return forecast_cpu(db, hours_ahead=hours, hostname=hostname)
+    if hostname:
+        return forecast_cpu(db, hours_ahead=hours, hostname=hostname)
+
+    results = [
+        (device, forecast_cpu(db, hours_ahead=hours, hostname=device))
+        for device in metric_hostnames(db)
+    ]
+    forecasts = [(device, result) for device, result in results if "predicted_cpu_percent" in result]
+    if not forecasts:
+        return {
+            "status": "not enough data",
+            "min_required": 10,
+            "have": max((result.get("have", 0) for _, result in results), default=0),
+            "devices_analyzed": len(results),
+        }
+
+    device, forecast = max(forecasts, key=lambda item: item[1]["predicted_cpu_percent"])
+    return {**forecast, "hostname": device, "devices_analyzed": len(forecasts)}
 
 
 @app.get("/predictions/failure")
@@ -186,7 +228,37 @@ def get_failure_prediction(
     hostname: str | None = Query(default=None, min_length=1, max_length=255),
     db: Session = Depends(get_db),
 ):
-    return predict_failures(db, hostname=hostname)
+    if hostname:
+        return predict_failures(db, hostname=hostname)
+
+    results = [
+        (device, predict_failures(db, hostname=device))
+        for device in metric_hostnames(db)
+    ]
+    if not results:
+        return predict_failures(db)
+
+    aggregated = {
+        "samples_used": max(result["samples_used"] for _, result in results),
+        "devices_analyzed": len(results),
+    }
+    for resource in ("cpu", "memory", "disk"):
+        candidates = [
+            (device, result[resource])
+            for device, result in results
+            if result[resource].get("status") != "not enough data"
+        ]
+        if not candidates:
+            aggregated[resource] = {"status": "not enough data"}
+            continue
+
+        at_risk = [item for item in candidates if item[1].get("hours_to_limit") is not None]
+        if at_risk:
+            device, prediction = min(at_risk, key=lambda item: item[1]["hours_to_limit"])
+        else:
+            device, prediction = max(candidates, key=lambda item: item[1]["current"])
+        aggregated[resource] = {**prediction, "hostname": device}
+    return aggregated
 
 
 @app.get("/alerts")
