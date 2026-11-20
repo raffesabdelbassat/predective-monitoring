@@ -347,29 +347,44 @@ def list_processes(
 @app.get("/metrics/export")
 def export_metrics(
     hostname: str | None = Query(default=None, min_length=1, max_length=255),
-    db: Session = Depends(get_db),
 ):
-    query = db.query(Metric)
-    if hostname:
-        query = query.filter(Metric.hostname == hostname)
-    rows = query.order_by(Metric.timestamp.asc()).all()
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["id", "timestamp", "hostname", "cpu_percent", "memory_percent", "disk_percent", "net_bytes_sent", "net_bytes_recv"])
-    for row in rows:
+    def csv_rows():
+        output = io.StringIO()
+        writer = csv.writer(output)
         writer.writerow([
-            row.id,
-            row.timestamp.isoformat(),
-            row.hostname,
-            row.cpu_percent,
-            row.memory_percent,
-            row.disk_percent,
-            row.net_bytes_sent,
-            row.net_bytes_recv,
+            "id",
+            "timestamp",
+            "hostname",
+            "cpu_percent",
+            "memory_percent",
+            "disk_percent",
+            "net_bytes_sent",
+            "net_bytes_recv",
         ])
-    output.seek(0)
+        yield output.getvalue()
+
+        with SessionLocal() as export_db:
+            query = export_db.query(Metric)
+            if hostname:
+                query = query.filter(Metric.hostname == hostname)
+            rows = query.order_by(Metric.timestamp.asc(), Metric.id.asc()).yield_per(500)
+            for row in rows:
+                output.seek(0)
+                output.truncate(0)
+                writer.writerow([
+                    row.id,
+                    row.timestamp.isoformat(),
+                    row.hostname,
+                    row.cpu_percent,
+                    row.memory_percent,
+                    row.disk_percent,
+                    row.net_bytes_sent,
+                    row.net_bytes_recv,
+                ])
+                yield output.getvalue()
+
     return StreamingResponse(
-        output,
+        csv_rows(),
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=metrics_export.csv"},
     )
