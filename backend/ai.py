@@ -1,13 +1,18 @@
 import pandas as pd
 from sklearn.ensemble import IsolationForest
 from sqlalchemy.orm import Session
-from db import Metric
+from db import Metric, PREDICTION_SAMPLE_WINDOW
 
 def detect_anomalies(db: Session, hostname: str | None = None):
     query = db.query(Metric)
     if hostname:
         query = query.filter(Metric.hostname == hostname)
-    rows = query.order_by(Metric.timestamp.asc()).all()
+    rows = (
+        query.order_by(Metric.timestamp.desc(), Metric.id.desc())
+        .limit(PREDICTION_SAMPLE_WINDOW)
+        .all()
+    )
+    rows.reverse()
     if len(rows) < 10:
         return {"status": "not enough data", "min_required": 10, "have": len(rows)}
 

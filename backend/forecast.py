@@ -1,14 +1,19 @@
 import numpy as np
 from sqlalchemy.orm import Session
 
-from db import Metric
+from db import Metric, PREDICTION_SAMPLE_WINDOW
 
 
 def forecast_cpu(db: Session, hours_ahead: int = 1, hostname: str | None = None):
     query = db.query(Metric)
     if hostname:
         query = query.filter(Metric.hostname == hostname)
-    rows = query.order_by(Metric.timestamp.asc()).all()
+    rows = (
+        query.order_by(Metric.timestamp.desc(), Metric.id.desc())
+        .limit(PREDICTION_SAMPLE_WINDOW)
+        .all()
+    )
+    rows.reverse()
     if len(rows) < 10:
         return {"status": "not enough data", "min_required": 10, "have": len(rows)}
 

@@ -11,6 +11,7 @@ DATABASE_URL = os.getenv(
     "postgresql://monitor_user:monitor_pass@127.0.0.1:5433/monitor_db",
 )
 METRIC_STALE_AFTER = timedelta(seconds=60)
+PREDICTION_SAMPLE_WINDOW = 500
 engine_options = {"pool_pre_ping": True}
 if DATABASE_URL.startswith("sqlite"):
     engine_options["connect_args"] = {"check_same_thread": False}
