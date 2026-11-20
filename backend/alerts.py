@@ -19,10 +19,22 @@ def get_alert_config(db: Session) -> AlertConfig:
 
 
 def check_alerts(db: Session, hostname: str | None = None):
+    if hostname is None:
+        hostnames = [
+            row[0]
+            for row in db.query(Metric.hostname).distinct().order_by(Metric.hostname).all()
+            if row[0]
+        ]
+        alerts = [
+            alert
+            for device_hostname in hostnames
+            for alert in check_alerts(db, hostname=device_hostname)["alerts"]
+        ]
+        return {"alert_count": len(alerts), "alerts": alerts}
+
     alerts = []
     query = db.query(Metric)
-    if hostname:
-        query = query.filter(Metric.hostname == hostname)
+    query = query.filter(Metric.hostname == hostname)
     latest = query.order_by(Metric.timestamp.desc()).first()
     if latest is None:
         return {"alert_count": 0, "alerts": []}
