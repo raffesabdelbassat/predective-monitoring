@@ -19,7 +19,7 @@ The collector sends machine readings to the API. The API stores them in Timescal
 ### What you can do
 
 - Track CPU, memory, disk, network, and top process usage.
-- Review historical charts, active alerts, and alert history.
+- Review historical charts and per-device active alerts; the fleet health card reflects the weakest device.
 - See CPU forecasts, anomaly checks, and resource capacity estimates.
 - Adjust alert thresholds and export metric history to CSV.
 - Spot stale telemetry: devices go offline and the health card turns stale after 60 seconds without a reading.
