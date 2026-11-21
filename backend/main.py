@@ -2,8 +2,9 @@ import asyncio
 import csv
 import io
 import os
+import secrets
 
-from fastapi import Body, Depends, FastAPI, Query, WebSocket, WebSocketDisconnect
+from fastapi import Body, Depends, FastAPI, Header, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from sqlalchemy import func, inspect, text
@@ -29,6 +30,7 @@ from schemas import AlertConfigIn, MetricIn, ProcessIn
 
 
 app = FastAPI(title="Predictive Monitoring API", version="1.0.0")
+AGENT_API_KEY = os.getenv("AGENT_API_KEY", "").strip()
 allowed_origins = [
     origin.strip()
     for origin in os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
@@ -38,7 +40,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_methods=["GET", "POST", "PUT", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization"],
+    allow_headers=["Content-Type", "Authorization", "X-Agent-Key"],
 )
 
 Base.metadata.create_all(bind=engine)
@@ -67,6 +69,11 @@ def metric_hostnames(db: Session) -> list[str]:
     ]
 
 
+def verify_agent_key(x_agent_key: str | None = Header(default=None)):
+    if AGENT_API_KEY and not secrets.compare_digest(x_agent_key or "", AGENT_API_KEY):
+        raise HTTPException(status_code=401, detail="Invalid or missing agent API key")
+
+
 @app.get("/")
 def read_root():
     return {"message": "Predictive Monitoring API is running", "docs": "/docs"}
@@ -90,7 +97,7 @@ def service_status(service_name: str):
     return {"service": service_name, "status": "unknown"}
 
 
-@app.post("/metrics", status_code=201)
+@app.post("/metrics", status_code=201, dependencies=[Depends(verify_agent_key)])
 def receive_metrics(metrics: MetricIn, db: Session = Depends(get_db)):
     db_metric = Metric(**metrics.model_dump())
     db.add(db_metric)
@@ -313,7 +320,7 @@ def get_health_score(
     return calculate_health_score(db, hostname=hostname)
 
 
-@app.post("/processes", status_code=201)
+@app.post("/processes", status_code=201, dependencies=[Depends(verify_agent_key)])
 def receive_processes(processes: list[ProcessIn] = Body(..., max_length=100), db: Session = Depends(get_db)):
     timestamp = utcnow()
     db.add_all([

@@ -55,7 +55,7 @@ Open:
 - Readiness check: <http://localhost:8000/health/ready>
 - PostgreSQL: `localhost:5433`
 
-The Compose defaults are intended for local development. Set `POSTGRES_PASSWORD` to a strong value before using a network accessible deployment. You can also set `API_PORT`, `FRONTEND_PORT`, `POSTGRES_PORT`, `CORS_ORIGINS`, and `VITE_API_URL` in the environment before starting Compose.
+The Compose defaults are intended for local development. Set `POSTGRES_PASSWORD` to a strong value before using a network accessible deployment. You can also set `API_PORT`, `FRONTEND_PORT`, `POSTGRES_PORT`, `CORS_ORIGINS`, `VITE_API_URL`, and `AGENT_API_KEY` in the environment before starting Compose. To require authenticated agent uploads, set `AGENT_API_KEY` in the API host shell before running `docker compose up --build`.
 
 ## Start the collector
 
@@ -75,16 +75,17 @@ For a different machine, replace `192.168.1.50` with the LAN address of the comp
 
 ```powershell
 $env:BACKEND_URL = "http://192.168.1.50:8000"
+$env:AGENT_API_KEY = "your-shared-long-random-key"
 python agent/collector.py
 ```
 
 On Linux or macOS:
 
 ```bash
-BACKEND_URL="http://192.168.1.50:8000" python agent/collector.py
+BACKEND_URL="http://192.168.1.50:8000" AGENT_API_KEY="your-shared-long-random-key" python agent/collector.py
 ```
 
-`BACKEND_URL` takes priority; the older `MONITORING_API_URL` setting is also supported. Set `COLLECTION_INTERVAL_SECONDS` to change the sampling interval; values below two seconds are raised to two seconds. Keep the API on a trusted network and do not expose it directly to the public internet.
+When using `AGENT_API_KEY`, set the same value before starting Docker Compose on the API machine and in the collector environment on every monitored machine. The key protects metric and process uploads; leaving it unset keeps local development simple. `BACKEND_URL` takes priority; the older `MONITORING_API_URL` setting is also supported. Set `COLLECTION_INTERVAL_SECONDS` to change the sampling interval; values below two seconds are raised to two seconds. Keep the API on a trusted network and do not expose it directly to the public internet.
 
 ## API overview
 

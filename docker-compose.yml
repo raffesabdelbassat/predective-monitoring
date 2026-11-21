@@ -27,6 +27,7 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-monitor_user}:${POSTGRES_PASSWORD:-monitor_pass}@timescaledb:5432/${POSTGRES_DB:-monitor_db}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
+      AGENT_API_KEY: ${AGENT_API_KEY:-}
     ports:
       - "${API_PORT:-8000}:8000"
     healthcheck:

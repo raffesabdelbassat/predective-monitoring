@@ -12,6 +12,8 @@ BACKEND_URL = os.getenv(
     os.getenv("MONITORING_API_URL", "http://127.0.0.1:8000"),
 ).rstrip("/")
 COLLECTION_INTERVAL_SECONDS = max(2, int(os.getenv("COLLECTION_INTERVAL_SECONDS", "10")))
+AGENT_API_KEY = os.getenv("AGENT_API_KEY", "")
+AGENT_HEADERS = {"X-Agent-Key": AGENT_API_KEY} if AGENT_API_KEY else {}
 
 
 def get_top_processes(limit=5):
@@ -43,7 +45,9 @@ def collect_metrics() -> dict:
 
 def send_metrics(metrics: dict):
     metric_payload = {key: value for key, value in metrics.items() if key != "top_processes"}
-    response = requests.post(f"{BACKEND_URL}/metrics", json=metric_payload, timeout=5)
+    response = requests.post(
+        f"{BACKEND_URL}/metrics", json=metric_payload, headers=AGENT_HEADERS, timeout=5
+    )
     response.raise_for_status()
     print(f"Sent metric, backend responded: {response.json()}")
 
@@ -60,7 +64,9 @@ def send_metrics(metrics: dict):
             for process in processes
             if process.get("pid") is not None
         ]
-        response = requests.post(f"{BACKEND_URL}/processes", json=process_payload, timeout=5)
+        response = requests.post(
+            f"{BACKEND_URL}/processes", json=process_payload, headers=AGENT_HEADERS, timeout=5
+        )
         response.raise_for_status()
 
 
